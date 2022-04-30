@@ -1,0 +1,10 @@
+{
+  "name": "tofex/magento-server-build",
+  "version": "1.0.0",
+  "type": "library",
+  "description": "Tofex Magento Server Build",
+  "license": "MIT",
+  "require": {
+    "php": ">=5.5.0"
+  }
+}
