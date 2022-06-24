@@ -58,7 +58,7 @@ else
   composer=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "composer")
 
   if [[ "${composer}" == 1 ]] || [[ "${composer}" == "yes" ]]; then
-    composerScript="${currentPath}/../ops/composer-install-local.sh"
+    composerScript="${currentPath}/../ops/composer-install/web-server.sh"
     "${currentPath}/build-git-local.sh" \
       -r "${gitUrl}" \
       -b "${branch}" \
