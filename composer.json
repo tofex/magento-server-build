@@ -1,6 +1,6 @@
 {
   "name": "tofex/magento-server-build",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "magento-server-component",
   "description": "Tofex Magento Server Build",
   "license": "MIT",

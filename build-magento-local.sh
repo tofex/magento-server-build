@@ -120,11 +120,11 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
       echo "Adding composer access to repository: ${repositoryUrl}"
       if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-          sudo -H -u "${webUser}" bash -c "composer config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+          sudo -H -u "${webUser}" bash -c "composer config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
         fi
       else
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-          composer config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+          composer config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
         fi
       fi
     done
@@ -142,10 +142,8 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
     jq '.scripts["post-install-cmd"] = ["bash -c \"shopt -s dotglob; test ! -e mage && cp -n -r vendor/magento/project-community-edition/* . || cat\""]' composer.json | sponge composer.json
     jq '.scripts["post-update-cmd"] = ["bash -c \"shopt -s dotglob; test ! -e mage && cp -n -r vendor/magento/project-community-edition/* . || cat\""]' composer.json | sponge composer.json
   else
-    composer create-project --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
+    composer create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
   fi
-
-  composer config --no-interaction http-basic.repo.magento.com 7a1e2f38c8b8d9ff6be0478fa4020fd9 31d148e4e6cef5f7c011d2a8e731424a
 
   if [[ -f "${magentoVersionFile}" ]]; then
     echo "Removing previous Magento version file at: ${magentoVersionFile}"
