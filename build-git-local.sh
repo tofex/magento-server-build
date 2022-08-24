@@ -143,10 +143,22 @@ else
   fi
 fi
 
-echo "Checking if branch exists: ${branch}"
+isBranch=0
+isTag=0
+
+echo "Checking if branch or tag exists: ${branch}"
 if [[ $(git ls-remote --heads "${url}" "${branch}" | wc -l) -eq 0 ]]; then
   echo "Branch ${branch} does not exist in repository: ${url}"
-  exit 1
+  if [[ $(git ls-remote --tags "${url}" "${branch}" | wc -l) -eq 0 ]]; then
+    echo "Tag ${branch} does not exist in repository: ${url}"
+    exit 1
+  else
+    echo "Tag ${branch} exists in repository: ${url}"
+    isTag=1
+  fi
+else
+  echo "Branch ${branch} exists in repository: ${url}"
+  isBranch=1
 fi
 
 if [[ ! -d "${buildPath}" ]]; then
@@ -198,18 +210,29 @@ currentBranch=$(git rev-parse --abbrev-ref HEAD)
 if [[ "${currentBranch}" == "${branch}" ]]; then
   echo "Already checked out branch: ${branch}"
 else
-  echo "Checking out branch: ${branch}"
-  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-    sudo -H -u "${webUser}" bash -c "git checkout --track -b ${branch} remotes/origin/${branch}"
-  else
-    git checkout --track -b "${branch}" "remotes/origin/${branch}"
+  if [[ "${isBranch}" == 1 ]]; then
+    echo "Checking out branch: ${branch}"
+    if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+      sudo -H -u "${webUser}" bash -c "git checkout --track -b ${branch} remotes/origin/${branch}"
+    else
+      git checkout --track -b "${branch}" "remotes/origin/${branch}"
+    fi
+  elif [[ "${isTag}" == 1 ]]; then
+    echo "Checking out tag: ${branch}"
+    if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+      sudo -H -u "${webUser}" bash -c "git checkout --no-track -b branch_${branch} tags/${branch}"
+    else
+      git checkout --no-track -b "branch_${branch}" "tags/${branch}"
+    fi
   fi
 fi
 
-if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  sudo -H -u "${webUser}" bash -c "git pull"
-else
-  git pull
+if [[ "${isBranch}" == 1 ]]; then
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    sudo -H -u "${webUser}" bash -c "git pull"
+  else
+    git pull
+  fi
 fi
 
 if [[ "${composer}" == 1 ]]; then
@@ -238,6 +261,15 @@ if [[ -f .gitignore ]]; then
     sudo -H -u "${webUser}" bash -c "rm -rf .gitignore"
   else
     rm -rf .gitignore
+  fi
+fi
+
+if [[ -d ads ]]; then
+  echo "Removing ADS directory"
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    sudo -H -u "${webUser}" bash -c "rm -rf ads"
+  else
+    rm -rf ads
   fi
 fi
 
