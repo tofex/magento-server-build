@@ -15,6 +15,7 @@ OPTIONS:
   -o  Overwrite Magento version
   -p  Log path
   -f  Log file name
+  -n  PHP executable, default: php
 
 Example: ${scriptName} -v 1.0.0 -p /var/www/magento/log/builds
 EOF
@@ -29,14 +30,16 @@ version=
 magentoOverwrite=0
 logPath=
 logFileName=
+phpExecutable=
 
-while getopts hv:op:f:? option; do
+while getopts hv:op:f:n:? option; do
   case ${option} in
     h) usage; exit 1;;
     v) version=$(trim "$OPTARG");;
     o) magentoOverwrite=1;;
     p) logPath=$(trim "$OPTARG");;
     f) logFileName=$(trim "$OPTARG");;
+    n) phpExecutable=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -70,12 +73,36 @@ buildType=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "type")
 
 if [[ "${buildType}" == "composer" ]]; then
   if [[ "${magentoOverwrite}" == 1 ]]; then
-    "${currentPath}/build-composer.sh" -v "${version}" -o
+    if [[ -n "${phpExecutable}" ]]; then
+      "${currentPath}/build-composer.sh" \
+        -v "${version}" \
+        -n "${phpExecutable}" \
+        -o
+    else
+      "${currentPath}/build-composer.sh" \
+        -v "${version}" \
+        -o
+    fi
   else
-    "${currentPath}/build-composer.sh" -v "${version}"
+    if [[ -n "${phpExecutable}" ]]; then
+      "${currentPath}/build-composer.sh" \
+        -v "${version}" \
+        -n "${phpExecutable}"
+    else
+      "${currentPath}/build-composer.sh" \
+        -v "${version}" \
+        -n "${phpExecutable}"
+    fi
   fi
 elif [[ "${buildType}" == "git" ]]; then
-  "${currentPath}/build-git.sh" -b "${version}"
+  if [[ -n "${phpExecutable}" ]]; then
+    "${currentPath}/build-git.sh" \
+      -b "${version}" \
+      -n "${phpExecutable}"
+  else
+    "${currentPath}/build-git.sh" \
+      -b "${version}"
+  fi
 else
   echo "Invalid build type: ${buildType}"
   exit 1

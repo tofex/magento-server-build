@@ -16,7 +16,7 @@ OPTIONS:
   -g  Web group (optional)
   -c  Run composer (optional)
   -s  Full path to composer script to run if composer process
-  -n  PHP binary, default: php
+  -n  PHP executable, default: php
 
 Example: ${scriptName} -r git@bitbucket.org:project01.git -b development  -p /var/www/magento/builds
 EOF

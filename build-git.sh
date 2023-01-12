@@ -10,6 +10,7 @@ usage: ${scriptName} options
 OPTIONS:
   -h  Show this message
   -b  Branch to build
+  -n  PHP executable, default: php
 
 Example: ${scriptName} -b development
 EOF
@@ -21,11 +22,13 @@ trim()
 }
 
 branch=
+phpExecutable=
 
-while getopts hb:? option; do
+while getopts hb:n:? option; do
   case ${option} in
     h) usage; exit 1;;
     b) branch=$(trim "$OPTARG");;
+    n) phpExecutable=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -48,7 +51,10 @@ buildServer=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "server
 serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "type")
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
-phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
+
+if [[ -z "${phpExecutable}" ]]; then
+  phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
+fi
 
 if [[ -z "${phpExecutable}" ]]; then
   phpExecutable="php"

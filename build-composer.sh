@@ -11,6 +11,7 @@ OPTIONS:
   -h  Show this message
   -v  Deploy version
   -o  Overwrite Magento version
+  -n  PHP executable, default: php
 
 Example: ${scriptName} -v 1.0.0
 EOF
@@ -23,12 +24,14 @@ trim()
 
 version=
 magentoOverwrite=0
+phpExecutable=
 
-while getopts hv:o? option; do
+while getopts hv:on:? option; do
   case "${option}" in
     h) usage; exit 1;;
     v) version=$(trim "$OPTARG");;
     o) magentoOverwrite=1;;
+    n) phpExecutable=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -57,10 +60,13 @@ buildMagento=$(ini-parse "${currentPath}/../env.properties" "no" "build" "magent
 serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "type")
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
-phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
 
 if [[ "${buildMagento}" != "no" ]]; then
   buildMagento="yes"
+fi
+
+if [[ -z "${phpExecutable}" ]]; then
+  phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
 fi
 
 if [[ -z "${phpExecutable}" ]]; then
