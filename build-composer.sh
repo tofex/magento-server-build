@@ -57,9 +57,14 @@ buildMagento=$(ini-parse "${currentPath}/../env.properties" "no" "build" "magent
 serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "type")
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
+phpBinary=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
 
 if [[ "${buildMagento}" != "no" ]]; then
   buildMagento="yes"
+fi
+
+if [[ -z "${phpBinary}" ]]; then
+  phpBinary="php"
 fi
 
 if [[ "${serverType}" == "ssh" ]]; then
@@ -78,6 +83,7 @@ else
         -r "${magentoRepositories}" \
         -u "${webUser}" \
         -g "${webGroup}" \
+        -n "${phpBinary}" \
         -o
     else
       "${currentPath}/build-magento-local.sh" \
@@ -85,7 +91,8 @@ else
         -m "${magentoVersion}" \
         -r "${magentoRepositories}" \
         -u "${webUser}" \
-        -g "${webGroup}"
+        -g "${webGroup}" \
+        -n "${phpBinary}"
     fi
   fi
 
@@ -103,7 +110,8 @@ else
       -m "${magentoVersion}" \
       -b "${buildPath}" \
       -u "${webUser}" \
-      -g "${webGroup}"
+      -g "${webGroup}" \
+      -n "${phpBinary}"
   else
     "${currentPath}/build-composer-local.sh" \
       -r "${repositories}" \
@@ -113,6 +121,7 @@ else
       -m "${magentoVersion}" \
       -b "${buildPath}" \
       -u "${webUser}" \
-      -g "${webGroup}"
+      -g "${webGroup}" \
+      -n "${phpBinary}"
   fi
 fi

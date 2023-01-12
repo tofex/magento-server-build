@@ -1,13 +1,13 @@
 {
-  "name": "tofex/magento-server-build",
-  "version": "1.0.8",
-  "type": "magento-server-component",
-  "description": "Tofex Magento Server Build",
-  "license": "MIT",
-  "require": {
-    "php": ">=7.0"
-  },
-  "extra": {
-    "installer-name": "build"
-  }
+    "name": "tofex/magento-server-build",
+    "version": "1.0.9",
+    "type": "magento-server-component",
+    "description": "Tofex Magento Server Build",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.0"
+    },
+    "extra": {
+        "installer-name": "build"
+    }
 }
