@@ -15,7 +15,7 @@ OPTIONS:
   -u  Web user (optional)
   -g  Web group (optional)
   -o  Overwrite Magento version
-  -n  PHP binary, default: php
+  -n  PHP executable, default: php
 
 Example: ${scriptName} -b /var/www/magento/builds -m 2.4.2 -r "composer|https://composer.company.com|12345|12345"
 EOF
@@ -32,7 +32,7 @@ magentoRepositories=
 webUser=
 webGroup=
 magentoOverwrite=0
-phpBinary=
+phpExecutable=
 
 while getopts hb:m:r:u:g:on:? option; do
   case "${option}" in
@@ -43,7 +43,7 @@ while getopts hb:m:r:u:g:on:? option; do
     u) webUser=$(trim "$OPTARG");;
     g) webGroup=$(trim "$OPTARG");;
     o) magentoOverwrite=1;;
-    n) phpBinary=$(trim "$OPTARG");;
+    n) phpExecutable=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -68,8 +68,8 @@ if [[ -z "${webGroup}" ]]; then
   webGroup="${currentGroup}"
 fi
 
-if [[ -z "${phpBinary}" ]]; then
-  phpBinary="php"
+if [[ -z "${phpExecutable}" ]]; then
+  phpExecutable="php"
 fi
 
 composerBinary=$(which composer)
@@ -129,11 +129,11 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
       echo "Adding composer access to repository: ${repositoryUrl}"
       if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-          sudo -H -u "${webUser}" bash -c "${phpBinary} ${composerBinary} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+          sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
         fi
       else
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-          "${phpBinary}" "${composerBinary}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+          "${phpExecutable}" "${composerBinary}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
         fi
       fi
     done
@@ -151,7 +151,7 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
     jq '.scripts["post-install-cmd"] = ["bash -c \"shopt -s dotglob; test ! -e mage && cp -n -r vendor/magento/project-community-edition/* . || cat\""]' composer.json | sponge composer.json
     jq '.scripts["post-update-cmd"] = ["bash -c \"shopt -s dotglob; test ! -e mage && cp -n -r vendor/magento/project-community-edition/* . || cat\""]' composer.json | sponge composer.json
   else
-    "${phpBinary}" "${composerBinary}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
+    "${phpExecutable}" "${composerBinary}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
   fi
 
   if [[ -f "${magentoVersionFile}" ]]; then

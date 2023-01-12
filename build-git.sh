@@ -48,6 +48,11 @@ buildServer=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "server
 serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "type")
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
+phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
+
+if [[ -z "${phpExecutable}" ]]; then
+  phpExecutable="php"
+fi
 
 if [[ "${serverType}" == "ssh" ]]; then
   echo "--- Building with Git on remote server: ${buildServer} ---"
@@ -66,7 +71,8 @@ else
       -u "${webUser}" \
       -g "${webGroup}" \
       -c \
-      -s "${composerScript}"
+      -s "${composerScript}" \
+      -n "${phpExecutable}"
   else
     "${currentPath}/build-git-local.sh" \
       -r "${gitUrl}" \

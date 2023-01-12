@@ -16,6 +16,7 @@ OPTIONS:
   -g  Web group (optional)
   -c  Run composer (optional)
   -s  Full path to composer script to run if composer process
+  -n  PHP binary, default: php
 
 Example: ${scriptName} -r git@bitbucket.org:project01.git -b development  -p /var/www/magento/builds
 EOF
@@ -33,8 +34,9 @@ webUser=
 webGroup=
 composer=0
 composerScript=
+phpExecutable=
 
-while getopts hb:r:p:u:g:cs:? option; do
+while getopts hb:r:p:u:g:cs:n:? option; do
   case ${option} in
     h) usage; exit 1;;
     r) url=$(trim "$OPTARG");;
@@ -44,6 +46,7 @@ while getopts hb:r:p:u:g:cs:? option; do
     g) webGroup=$(trim "$OPTARG");;
     c) composer=1;;
     s) composerScript=$(trim "$OPTARG");;
+    n) phpExecutable=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -66,6 +69,10 @@ fi
 if [[ "${composer}" == 1 ]] && [[ -z "${composerScript}" ]]; then
   echo "No composer script specified"
   exit 1
+fi
+
+if [[ -z "${phpExecutable}" ]]; then
+  phpExecutable="php"
 fi
 
 branchPathName=$(echo "${branch}" | sed 's/[^a-zA-Z0-9\.\-]/_/g')
@@ -243,7 +250,8 @@ if [[ "${composer}" == 1 ]]; then
   "${composerScript}" \
     -w "${branchPath}" \
     -u "${webUser}" \
-    -g "${webGroup}"
+    -g "${webGroup}" \
+    -b "${phpExecutable}"
 fi
 
 if [[ -d .git ]]; then
