@@ -40,7 +40,7 @@ composer=0
 composerScript=
 phpExecutable=
 
-while getopts hb:r:p:u:g:cs:n:? option; do
+while getopts hb:i:m:r:p:u:g:cs:n:? option; do
   case ${option} in
     h) usage; exit 1;;
     r) url=$(trim "$OPTARG");;
