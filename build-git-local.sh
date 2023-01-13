@@ -185,7 +185,7 @@ if [[ ! -d "${buildPath}" ]]; then
   set -e
 fi
 
-branchPath="${buildPath}/${branchPathName}"
+branchPath="${buildPath}/git/${branchPathName}"
 
 if [[ -d "${branchPath}" ]]; then
   echo "Removing previous build"
