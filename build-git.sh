@@ -109,6 +109,7 @@ else
     "${currentPath}/build-git-local.sh" \
       -r "${gitUrl}" \
       -b "${branch}" \
+      -i "${magento}" \
       -p "${buildPath}" \
       -u "${webUser}" \
       -g "${webGroup}" \
@@ -119,6 +120,7 @@ else
     "${currentPath}/build-git-local.sh" \
       -r "${gitUrl}" \
       -b "${branch}" \
+      -i "${magento}" \
       -p "${buildPath}" \
       -u "${webUser}" \
       -g "${webGroup}"
