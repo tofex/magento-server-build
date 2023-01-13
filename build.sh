@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 scriptName="${0##*/}"
 
 usage()
@@ -33,7 +32,7 @@ logFileName=
 phpExecutable=
 
 while getopts hv:op:f:n:? option; do
-  case ${option} in
+  case "${option}" in
     h) usage; exit 1;;
     v) version=$(trim "$OPTARG");;
     o) magentoOverwrite=1;;
@@ -95,13 +94,26 @@ if [[ "${buildType}" == "composer" ]]; then
     fi
   fi
 elif [[ "${buildType}" == "git" ]]; then
-  if [[ -n "${phpExecutable}" ]]; then
-    "${currentPath}/build-git.sh" \
-      -b "${version}" \
-      -n "${phpExecutable}"
+  if [[ "${magentoOverwrite}" == 1 ]]; then
+    if [[ -n "${phpExecutable}" ]]; then
+      "${currentPath}/build-git.sh" \
+        -b "${version}" \
+        -n "${phpExecutable}" \
+        -o
+    else
+      "${currentPath}/build-git.sh" \
+        -b "${version}" \
+        -o
+    fi
   else
-    "${currentPath}/build-git.sh" \
-      -b "${version}"
+    if [[ -n "${phpExecutable}" ]]; then
+      "${currentPath}/build-git.sh" \
+        -b "${version}" \
+        -n "${phpExecutable}"
+    else
+      "${currentPath}/build-git.sh" \
+        -b "${version}"
+    fi
   fi
 else
   echo "Invalid build type: ${buildType}"

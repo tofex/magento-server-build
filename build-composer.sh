@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 scriptName="${0##*/}"
 
 usage()
@@ -41,8 +42,6 @@ if [[ -z "${version}" ]]; then
   exit 1
 fi
 
-currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 cd "${currentPath}"
 
 if [[ ! -f ${currentPath}/../env.properties ]]; then
@@ -56,13 +55,13 @@ buildServer=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "server
 repositoryList=( $(ini-parse "${currentPath}/../env.properties" "yes" "build" "repositories") )
 composerProject=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "composerProject")
 additionalComposerProjectList=( $(ini-parse "${currentPath}/../env.properties" "no" "build" "additionalComposerProject") )
-buildMagento=$(ini-parse "${currentPath}/../env.properties" "no" "build" "magento")
+magento=$(ini-parse "${currentPath}/../env.properties" "no" "build" "magento")
 serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "type")
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
 
-if [[ "${buildMagento}" != "no" ]]; then
-  buildMagento="yes"
+if [[ "${magento}" != "no" ]]; then
+  magento="yes"
 fi
 
 if [[ -z "${phpExecutable}" ]]; then
@@ -81,7 +80,7 @@ else
 
   magentoRepositories=$( IFS=$','; echo "${magentoRepositoryList[*]}" )
 
-  if [[ "${buildMagento}" == "yes" ]]; then
+  if [[ "${magento}" == "yes" ]]; then
     if [[ "${magentoOverwrite}" == 1 ]]; then
       "${currentPath}/build-magento-local.sh" \
         -b "${buildPath}" \

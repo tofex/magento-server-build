@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 scriptName="${0##*/}"
 
 usage()
@@ -10,6 +11,7 @@ usage: ${scriptName} options
 OPTIONS:
   -h  Show this message
   -b  Branch to build
+  -o  Overwrite Magento version
   -n  PHP executable, default: php
 
 Example: ${scriptName} -b development
@@ -22,12 +24,14 @@ trim()
 }
 
 branch=
+magentoOverwrite=0
 phpExecutable=
 
-while getopts hb:n:? option; do
-  case ${option} in
+while getopts hb:on:? option; do
+  case "${option}" in
     h) usage; exit 1;;
     b) branch=$(trim "$OPTARG");;
+    o) magentoOverwrite=1;;
     n) phpExecutable=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
@@ -38,8 +42,6 @@ if [[ -z "${branch}" ]]; then
   exit 1
 fi
 
-currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 cd "${currentPath}"
 
 if [[ ! -f ${currentPath}/../env.properties ]]; then
@@ -47,10 +49,23 @@ if [[ ! -f ${currentPath}/../env.properties ]]; then
   exit 1
 fi
 
+magentoVersion=$(ini-parse "${currentPath}/../env.properties" "yes" "install" "magentoVersion")
+magentoRepositoryList=( $(ini-parse "${currentPath}/../env.properties" "yes" "install" "repositories") )
 buildServer=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "server")
+gitUrl=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "gitUrl")
+magento=$(ini-parse "${currentPath}/../env.properties" "no" "build" "magento")
+composer=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "composer")
 serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "type")
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
+
+if [[ "${magento}" != "yes" ]] && [[ "${magento}" != 1 ]]; then
+  magento="no"
+fi
+
+if [[ "${composer}" != "yes" ]] && [[ "${composer}" != 1 ]]; then
+  composer="no"
+fi
 
 if [[ -z "${phpExecutable}" ]]; then
   phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
@@ -64,9 +79,30 @@ if [[ "${serverType}" == "ssh" ]]; then
   echo "--- Building with Git on remote server: ${buildServer} ---"
 else
   echo "--- Building with Git on local server: ${buildServer} ---"
-  gitUrl=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "gitUrl")
   buildPath=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "buildPath")
-  composer=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "composer")
+
+  magentoRepositories=$( IFS=$','; echo "${magentoRepositoryList[*]}" )
+
+  if [[ "${magento}" == "yes" ]]; then
+    if [[ "${magentoOverwrite}" == 1 ]]; then
+      "${currentPath}/build-magento-local.sh" \
+        -b "${buildPath}" \
+        -m "${magentoVersion}" \
+        -r "${magentoRepositories}" \
+        -u "${webUser}" \
+        -g "${webGroup}" \
+        -n "${phpExecutable}" \
+        -o
+    else
+      "${currentPath}/build-magento-local.sh" \
+        -b "${buildPath}" \
+        -m "${magentoVersion}" \
+        -r "${magentoRepositories}" \
+        -u "${webUser}" \
+        -g "${webGroup}" \
+        -n "${phpExecutable}"
+    fi
+  fi
 
   if [[ "${composer}" == 1 ]] || [[ "${composer}" == "yes" ]]; then
     composerScript="${currentPath}/../ops/composer-install/web-server.sh"
