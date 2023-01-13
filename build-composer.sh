@@ -60,7 +60,7 @@ serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}"
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
 
-if [[ "${magento}" != "no" ]]; then
+if [[ "${magento}" != "no" ]] && [[ "${magento}" != 0 ]]; then
   magento="yes"
 fi
 

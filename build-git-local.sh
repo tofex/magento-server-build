@@ -11,6 +11,8 @@ OPTIONS:
   -h  Show this message
   -r  Git Repository Url
   -b  Branch to build
+  -i  Use Magento, default: yes
+  -m  Magento version
   -p  Base path of builds
   -u  Web user (optional)
   -g  Web group (optional)
@@ -29,6 +31,8 @@ trim()
 
 url=
 branch=
+magento="yes"
+magentoVersion=
 buildPath=
 webUser=
 webGroup=
@@ -41,6 +45,8 @@ while getopts hb:r:p:u:g:cs:n:? option; do
     h) usage; exit 1;;
     r) url=$(trim "$OPTARG");;
     b) branch=$(trim "$OPTARG");;
+    i) magento=$(trim "$OPTARG");;
+    m) magentoVersion=$(trim "$OPTARG");;
     p) buildPath=$(trim "$OPTARG");;
     u) webUser=$(trim "$OPTARG");;
     g) webGroup=$(trim "$OPTARG");;
@@ -58,6 +64,15 @@ fi
 
 if [[ -z "${url}" ]]; then
   echo "No repository url specified!"
+  exit 1
+fi
+
+if [[ "${magento}" != "no" ]] && [[ "${magento}" != 0 ]]; then
+  magento="yes"
+fi
+
+if [[ "${magento}" == "yes" ]] && [[ -z "${magentoVersion}" ]]; then
+  echo "No magento version specified!"
   exit 1
 fi
 
@@ -150,6 +165,16 @@ else
   fi
 fi
 
+if [[ "${magento}" == "yes" ]]; then
+  magentoPath="${buildPath}/magento"
+  magentoVersionFile="${magentoPath}/${magentoVersion}.tar.gz"
+
+  if [[ ! -f "${magentoVersionFile}" ]]; then
+    echo "Missing Magento version file at: ${magentoVersionFile}"
+    exit 1
+  fi
+fi
+
 isBranch=0
 isTag=0
 
@@ -185,27 +210,27 @@ if [[ ! -d "${buildPath}" ]]; then
   set -e
 fi
 
-branchPath="${buildPath}/git/${branchPathName}"
+branchGitPath="${buildPath}/git/${branchPathName}"
 
-if [[ -d "${branchPath}" ]]; then
-  echo "Removing previous build"
+if [[ -d "${branchGitPath}" ]]; then
+  echo "Removing previous build GIT path: ${branchGitPath}"
   if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-    sudo -H -u "${webUser}" bash -c "rm -rf ${branchPath}/"
+    sudo -H -u "${webUser}" bash -c "rm -rf ${branchGitPath}/"
   else
-    rm -rf "${branchPath:?}/"
+    rm -rf "${branchGitPath:?}/"
   fi
 fi
 
-echo "Creating branch build path: ${branchPath}"
+echo "Creating branch build GIT path: ${branchGitPath}"
 if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  sudo -H -u "${webUser}" bash -c "mkdir -p ${branchPath}"
+  sudo -H -u "${webUser}" bash -c "mkdir -p ${branchGitPath}"
 else
-  mkdir -p "${branchPath}"
+  mkdir -p "${branchGitPath}"
 fi
 
-cd "${branchPath}"
+cd "${branchGitPath}"
 
-echo "Cloning repository into path: ${branchPath}"
+echo "Cloning repository into path: ${branchGitPath}"
 if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
   sudo -H -u "${webUser}" bash -c "git clone ${url} ."
 else
@@ -240,18 +265,6 @@ if [[ "${isBranch}" == 1 ]]; then
   else
     git pull
   fi
-fi
-
-if [[ "${composer}" == 1 ]]; then
-  if [[ ! -f "${composerScript}" ]]; then
-    echo "Missing composer script at: ${composerScript}"
-    exit 1
-  fi
-  "${composerScript}" \
-    -w "${branchPath}" \
-    -u "${webUser}" \
-    -g "${webGroup}" \
-    -b "${phpExecutable}"
 fi
 
 if [[ -d .git ]]; then
@@ -299,24 +312,88 @@ if [[ -f Vagrantfile ]]; then
   fi
 fi
 
+branchPath="${buildPath}/${branchPathName}"
+
+if [[ -d "${branchPath}" ]]; then
+  echo "Removing previous build path: ${branchPath}"
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    sudo -H -u "${webUser}" bash -c "rm -rf ${branchPath}/"
+  else
+    rm -rf "${branchPath:?}/"
+  fi
+fi
+
+echo "Creating branch build path: ${branchPath}"
+if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+  sudo -H -u "${webUser}" bash -c "mkdir -p ${branchPath}"
+else
+  mkdir -p "${branchPath}"
+fi
+
+if [[ "${magento}" == "yes" ]]; then
+  echo "Copying Magento version file from: ${magentoVersionFile} to build path"
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    sudo -H -u "${webUser}" bash -c "cp ${magentoVersionFile} ${branchPath}"
+  else
+    cp "${magentoVersionFile}" "${branchPath}"
+  fi
+
+  fileName=$(basename "${magentoVersionFile}")
+
+  cd "${branchPath}"
+
+  echo "Extracting Magento version file: ${fileName}"
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    sudo -H -u "${webUser}" bash -c "tar -xf ${fileName} | cat"
+  else
+    tar -xf "${fileName}" | cat
+  fi
+
+  echo "Removing copied Magento version file: ${fileName}"
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    sudo -H -u "${webUser}" bash -c "rm -rf ${fileName}"
+  else
+    rm -rf "${fileName}"
+  fi
+fi
+
+echo "Copying all files from GIT path: ${branchGitPath} to build path: ${buildPath}"
+cp -rf "${branchGitPath}" "${branchPath}"
+
+cd "${branchPath}"
+
+if [[ "${composer}" == 1 ]]; then
+  if [[ ! -f "${composerScript}" ]]; then
+    echo "Missing composer script at: ${composerScript}"
+    exit 1
+  fi
+  "${composerScript}" \
+    -w "${branchPath}" \
+    -u "${webUser}" \
+    -g "${webGroup}" \
+    -b "${phpExecutable}"
+fi
+
 echo "Creating vcs-info.txt"
 echo "Version: ${branch}" > vcs-info.txt
 echo "Build-Date: $(LC_ALL=en_US.utf8 date +"%Y-%m-%d %H:%M:%S %z")" >> vcs-info.txt
 
-if [[ -f "${buildPath}/${branchPathName}.tar.gz" ]]; then
-  echo "Removing previous archive at: ${buildPath}/${branchPathName}.tar.gz"
+branchFile="${buildPath}/${branchPathName}.tar.gz"
+
+if [[ -f "${branchFile}" ]]; then
+  echo "Removing previous archive at: ${branchFile}"
   if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-    sudo -H -u "${webUser}" bash -c "rm -rf ${buildPath}/${branchPathName}.tar.gz"
+    sudo -H -u "${webUser}" bash -c "rm -rf ${branchFile}"
   else
-    rm -rf "${buildPath}/${branchPathName}.tar.gz"
+    rm -rf "${branchFile}"
   fi
 fi
 
-echo "Creating archive of branch: ${buildPath}/${branchPathName}.tar.gz"
+echo "Creating archive of branch: ${branchFile}"
 if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  sudo -H -u "${webUser}" bash -c "tar -zcf ${buildPath}/${branchPathName}.tar.gz ."
+  sudo -H -u "${webUser}" bash -c "tar -zcf ${branchFile} ."
 else
-  tar -zcf "${buildPath}/${branchPathName}.tar.gz" .
+  tar -zcf "${branchFile}" .
 fi
 
 cd ..

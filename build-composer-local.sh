@@ -13,8 +13,9 @@ OPTIONS:
   -s  Magento repositories (format: type|url|user|password,type2|url2|user2|password2)
   -p  Composer project
   -v  Composer project version
-  -i  Build Magento
+  -i  Use Magento, default: yes
   -m  Magento version
+  -a  Additional composer projects
   -b  Base path of builds
   -u  Web user (optional)
   -g  Web group (optional)
@@ -33,7 +34,7 @@ repositories=
 magentoRepositories=
 composerProject=
 composerVersion=
-buildMagento="yes"
+magento="yes"
 magentoVersion=
 additionalComposerProjects=
 buildPath=
@@ -48,7 +49,7 @@ while getopts hr:s:p:v:i:m:a:b:u:g:n:? option; do
     s) magentoRepositories=$(trim "$OPTARG");;
     p) composerProject=$(trim "$OPTARG");;
     v) composerVersion=$(trim "$OPTARG");;
-    i) buildMagento=$(trim "$OPTARG");;
+    i) magento=$(trim "$OPTARG");;
     m) magentoVersion=$(trim "$OPTARG");;
     a) additionalComposerProjects=$(trim "$OPTARG");;
     b) buildPath=$(trim "$OPTARG");;
@@ -74,13 +75,17 @@ if [[ -z "${composerVersion}" ]]; then
   exit 1
 fi
 
-if [[ -z "${buildPath}" ]]; then
-  echo "No base path of builds specified!"
+if [[ "${magento}" != "no" ]] && [[ "${magento}" != 0 ]]; then
+  magento="yes"
+fi
+
+if [[ "${magento}" == "yes" ]] && [[ -z "${magentoVersion}" ]]; then
+  echo "No magento version specified!"
   exit 1
 fi
 
-if [[ -z "${magentoVersion}" ]]; then
-  echo "No magento version specified!"
+if [[ -z "${buildPath}" ]]; then
+  echo "No base path of builds specified!"
   exit 1
 fi
 
@@ -107,7 +112,7 @@ rm -rf ~/".composer/cache/files/${composerProject}/"
 rm -rf ~/".cache/composer/repo/https---composer.tofex.de/provider-${cacheName}.json"
 rm -rf ~/".composer/cache/repo/https---composer.tofex.de/provider-${cacheName}.json"
 
-if [[ "${buildMagento}" == "yes" ]]; then
+if [[ "${magento}" == "yes" ]]; then
   magentoPath="${buildPath}/magento"
   magentoVersionFile="${magentoPath}/${magentoVersion}.tar.gz"
 
@@ -145,9 +150,7 @@ if [[ ! -d "${versionPath}" ]]; then
   set -e
 fi
 
-if [[ "${buildMagento}" == "yes" ]]; then
-  versionFile="${versionPath}.tar.gz"
-
+if [[ "${magento}" == "yes" ]]; then
   echo "Copying Magento version file from: ${magentoVersionFile} to build path"
   if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
     sudo -H -u "${webUser}" bash -c "cp ${magentoVersionFile} ${versionPath}"
@@ -270,6 +273,8 @@ fi
 echo "Creating vcs-info.txt"
 echo "Version: ${composerVersion}" > vcs-info.txt
 echo "Build-Date: $(LC_ALL=en_US.utf8 date +"%Y-%m-%d %H:%M:%S %z")" >> vcs-info.txt
+
+versionFile="${versionPath}.tar.gz"
 
 if [[ -f "${versionFile}" ]]; then
   echo "Removing previous version file at: ${versionFile}"

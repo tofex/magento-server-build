@@ -59,8 +59,8 @@ serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}"
 webUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webUser")
 webGroup=$(ini-parse "${currentPath}/../env.properties" "yes" "${buildServer}" "webGroup")
 
-if [[ "${magento}" != "yes" ]] && [[ "${magento}" != 1 ]]; then
-  magento="no"
+if [[ "${magento}" != "no" ]] && [[ "${magento}" != 0 ]]; then
+  magento="yes"
 fi
 
 if [[ "${composer}" != "yes" ]] && [[ "${composer}" != 1 ]]; then
