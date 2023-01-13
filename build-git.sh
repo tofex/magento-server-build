@@ -104,25 +104,51 @@ else
     fi
   fi
 
-  if [[ "${composer}" == 1 ]] || [[ "${composer}" == "yes" ]]; then
-    composerScript="${currentPath}/../ops/composer-install/web-server.sh"
-    "${currentPath}/build-git-local.sh" \
-      -r "${gitUrl}" \
-      -b "${branch}" \
-      -i "${magento}" \
-      -p "${buildPath}" \
-      -u "${webUser}" \
-      -g "${webGroup}" \
-      -c \
-      -s "${composerScript}" \
-      -n "${phpExecutable}"
+  if [[ "${magento}" == "yes" ]]; then
+    if [[ "${composer}" == 1 ]] || [[ "${composer}" == "yes" ]]; then
+      composerScript="${currentPath}/../ops/composer-install/web-server.sh"
+      "${currentPath}/build-git-local.sh" \
+        -r "${gitUrl}" \
+        -b "${branch}" \
+        -i "${magento}" \
+        -m "${magentoVersion}" \
+        -p "${buildPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}" \
+        -c \
+        -s "${composerScript}" \
+        -n "${phpExecutable}"
+    else
+      "${currentPath}/build-git-local.sh" \
+        -r "${gitUrl}" \
+        -b "${branch}" \
+        -i "${magento}" \
+        -m "${magentoVersion}" \
+        -p "${buildPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}"
+    fi
   else
-    "${currentPath}/build-git-local.sh" \
-      -r "${gitUrl}" \
-      -b "${branch}" \
-      -i "${magento}" \
-      -p "${buildPath}" \
-      -u "${webUser}" \
-      -g "${webGroup}"
+    if [[ "${composer}" == 1 ]] || [[ "${composer}" == "yes" ]]; then
+      composerScript="${currentPath}/../ops/composer-install/web-server.sh"
+      "${currentPath}/build-git-local.sh" \
+        -r "${gitUrl}" \
+        -b "${branch}" \
+        -i "${magento}" \
+        -p "${buildPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}" \
+        -c \
+        -s "${composerScript}" \
+        -n "${phpExecutable}"
+    else
+      "${currentPath}/build-git-local.sh" \
+        -r "${gitUrl}" \
+        -b "${branch}" \
+        -i "${magento}" \
+        -p "${buildPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}"
+    fi
   fi
 fi
