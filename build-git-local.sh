@@ -359,7 +359,7 @@ fi
 
 echo "Copying all files from GIT path: ${branchGitPath} to build path: ${branchPath}"
 shopt -s dotglob
-cp -rf "${branchGitPath}/*" "${branchPath}/"
+cp -rf "${branchGitPath}"/* "${branchPath}"/
 shopt -u dotglob
 
 cd "${branchPath}"
