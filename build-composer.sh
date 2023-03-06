@@ -12,7 +12,8 @@ OPTIONS:
   -h  Show this message
   -v  Deploy version
   -o  Overwrite Magento version
-  -n  PHP executable, default: php
+  -n  PHP executable (optional)
+  -c  Composer script (optional)
 
 Example: ${scriptName} -v 1.0.0
 EOF
@@ -26,13 +27,15 @@ trim()
 version=
 magentoOverwrite=0
 phpExecutable=
+composerScript=
 
-while getopts hv:on:? option; do
+while getopts hv:on:c:? option; do
   case "${option}" in
     h) usage; exit 1;;
     v) version=$(trim "$OPTARG");;
     o) magentoOverwrite=1;;
     n) phpExecutable=$(trim "$OPTARG");;
+    c) composerScript=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -68,8 +71,8 @@ if [[ -z "${phpExecutable}" ]]; then
   phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
 fi
 
-if [[ -z "${phpExecutable}" ]]; then
-  phpExecutable="php"
+if [[ -z "${composerScript}" ]]; then
+  composerScript=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "composer")
 fi
 
 if [[ "${serverType}" == "ssh" ]]; then
@@ -82,22 +85,85 @@ else
 
   if [[ "${magento}" == "yes" ]]; then
     if [[ "${magentoOverwrite}" == 1 ]]; then
-      "${currentPath}/build-magento-local.sh" \
-        -b "${buildPath}" \
-        -m "${magentoVersion}" \
-        -r "${magentoRepositories}" \
-        -u "${webUser}" \
-        -g "${webGroup}" \
-        -n "${phpExecutable}" \
-        -o
+      if [[ -n "${phpExecutable}" ]]; then
+        if [[ -n "${composerScript}" ]]; then
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}" \
+            -n "${phpExecutable}" \
+            -c "${composerScript}" \
+            -o
+        else
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}" \
+            -n "${phpExecutable}" \
+            -o
+        fi
+      else
+        if [[ -n "${composerScript}" ]]; then
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}" \
+            -c "${composerScript}" \
+            -o
+        else
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}" \
+            -o
+        fi
+      fi
     else
-      "${currentPath}/build-magento-local.sh" \
-        -b "${buildPath}" \
-        -m "${magentoVersion}" \
-        -r "${magentoRepositories}" \
-        -u "${webUser}" \
-        -g "${webGroup}" \
-        -n "${phpExecutable}"
+      if [[ -n "${phpExecutable}" ]]; then
+        if [[ -n "${composerScript}" ]]; then
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}" \
+            -n "${phpExecutable}" \
+            -c "${composerScript}"
+        else
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}" \
+            -n "${phpExecutable}"
+        fi
+      else
+        if [[ -n "${composerScript}" ]]; then
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}" \
+            -c "${composerScript}"
+        else
+          "${currentPath}/build-magento-local.sh" \
+            -b "${buildPath}" \
+            -m "${magentoVersion}" \
+            -r "${magentoRepositories}" \
+            -u "${webUser}" \
+            -g "${webGroup}"
+        fi
+      fi
     fi
   fi
 
@@ -106,27 +172,108 @@ else
   if [[ "${#additionalComposerProjectList[@]}" -gt 0 ]]; then
     additionalComposerProjects=$( IFS=$','; echo "${additionalComposerProjectList[*]}" )
 
-    "${currentPath}/build-composer-local.sh" \
-      -r "${repositories}" \
-      -s "${magentoRepositories}" \
-      -p "${composerProject}" \
-      -v "${version}" \
-      -a "${additionalComposerProjects}" \
-      -m "${magentoVersion}" \
-      -b "${buildPath}" \
-      -u "${webUser}" \
-      -g "${webGroup}" \
-      -n "${phpExecutable}"
+    if [[ -n "${phpExecutable}" ]]; then
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}" \
+          -n "${phpExecutable}" \
+          -c "${composerScript}" \
+          -a "${additionalComposerProjects}"
+      else
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}" \
+          -n "${phpExecutable}" \
+          -a "${additionalComposerProjects}"
+      fi
+    else
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}" \
+          -c "${composerScript}" \
+          -a "${additionalComposerProjects}"
+      else
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}" \
+          -a "${additionalComposerProjects}"
+      fi
+    fi
   else
-    "${currentPath}/build-composer-local.sh" \
-      -r "${repositories}" \
-      -s "${magentoRepositories}" \
-      -p "${composerProject}" \
-      -v "${version}" \
-      -m "${magentoVersion}" \
-      -b "${buildPath}" \
-      -u "${webUser}" \
-      -g "${webGroup}" \
-      -n "${phpExecutable}"
+    if [[ -n "${phpExecutable}" ]]; then
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}" \
+          -n "${phpExecutable}" \
+          -c "${composerScript}"
+      else
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}" \
+          -n "${phpExecutable}"
+      fi
+    else
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}" \
+          -c "${composerScript}"
+      else
+        "${currentPath}/build-composer-local.sh" \
+          -r "${repositories}" \
+          -s "${magentoRepositories}" \
+          -p "${composerProject}" \
+          -v "${version}" \
+          -m "${magentoVersion}" \
+          -b "${buildPath}" \
+          -u "${webUser}" \
+          -g "${webGroup}"
+      fi
+    fi
   fi
 fi

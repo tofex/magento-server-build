@@ -102,7 +102,7 @@ if [[ -z "${webGroup}" ]]; then
   webGroup="${currentGroup}"
 fi
 
-webUserHome=$(grep "${webUser}" /etc/passwd | cut -d':' -f6)
+webUserHome=$(grep "${webUser}:" /etc/passwd | cut -d':' -f6)
 
 echo "Checking SSH keys of repository"
 if [[ ! -f "${webUserHome}/.ssh/known_hosts" ]]; then
@@ -113,55 +113,57 @@ if [[ ! -f "${webUserHome}/.ssh/known_hosts" ]]; then
   fi
 fi
 
-key=$(ssh-keyscan bitbucket.org 2>/dev/null)
-if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: bitbucket.org"
-    sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
+if [[ $(which ssh-keyscan >/dev/null 2>&1 && echo "yes" || echo "no") == "yes" ]]; then
+  key=$(ssh-keyscan bitbucket.org 2>/dev/null)
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: bitbucket.org"
+      sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
+    fi
+  else
+    if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: bitbucket.org"
+      echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
+    fi
   fi
-else
-  if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: bitbucket.org"
-    echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
-  fi
-fi
 
-key=$(ssh-keyscan 18.205.93.0 2>/dev/null)
-if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: 18.205.93.0"
-    sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
+  key=$(ssh-keyscan 18.205.93.0 2>/dev/null)
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: 18.205.93.0"
+      sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
+    fi
+  else
+    if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: 18.205.93.0"
+      echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
+    fi
   fi
-else
-  if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: 18.205.93.0"
-    echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
-  fi
-fi
 
-key=$(ssh-keyscan 18.205.93.1 2>/dev/null)
-if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: 18.205.93.1"
-    sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
+  key=$(ssh-keyscan 18.205.93.1 2>/dev/null)
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: 18.205.93.1"
+      sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
+    fi
+  else
+    if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: 18.205.93.1"
+      echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
+    fi
   fi
-else
-  if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: 18.205.93.1"
-    echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
-  fi
-fi
 
-key=$(ssh-keyscan 18.205.93.2 2>/dev/null)
-if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: 18.205.93.2"
-    sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
-  fi
-else
-  if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
-    echo "Adding known host: 18.205.93.2"
-    echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
+  key=$(ssh-keyscan 18.205.93.2 2>/dev/null)
+  if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
+    if [[ $(sudo -H -u "${webUser}" bash -c "grep ${key} ${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: 18.205.93.2"
+      sudo -H -u "${webUser}" bash -c "echo ${key} >> ${webUserHome}/.ssh/known_hosts"
+    fi
+  else
+    if [[ $(grep "${key}" "${webUserHome}/.ssh/known_hosts" | wc -l) -eq 0 ]]; then
+      echo "Adding known host: 18.205.93.2"
+      echo "${key}" >> "${webUserHome}/.ssh/known_hosts"
+    fi
   fi
 fi
 

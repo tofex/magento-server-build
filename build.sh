@@ -14,7 +14,8 @@ OPTIONS:
   -o  Overwrite Magento version
   -p  Log path
   -f  Log file name
-  -n  PHP executable, default: php
+  -n  PHP executable (optional)
+  -c  Composer script (optional)
 
 Example: ${scriptName} -v 1.0.0 -p /var/www/magento/log/builds
 EOF
@@ -30,8 +31,9 @@ magentoOverwrite=0
 logPath=
 logFileName=
 phpExecutable=
+composerScript=
 
-while getopts hv:op:f:n:? option; do
+while getopts hv:op:f:n:c:? option; do
   case "${option}" in
     h) usage; exit 1;;
     v) version=$(trim "$OPTARG");;
@@ -39,6 +41,7 @@ while getopts hv:op:f:n:? option; do
     p) logPath=$(trim "$OPTARG");;
     f) logFileName=$(trim "$OPTARG");;
     n) phpExecutable=$(trim "$OPTARG");;
+    c) composerScript=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -73,24 +76,51 @@ buildType=$(ini-parse "${currentPath}/../env.properties" "yes" "build" "type")
 if [[ "${buildType}" == "composer" ]]; then
   if [[ "${magentoOverwrite}" == 1 ]]; then
     if [[ -n "${phpExecutable}" ]]; then
-      "${currentPath}/build-composer.sh" \
-        -v "${version}" \
-        -n "${phpExecutable}" \
-        -o
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer.sh" \
+          -v "${version}" \
+          -n "${phpExecutable}" \
+          -c "${composerScript}" \
+          -o
+      else
+        "${currentPath}/build-composer.sh" \
+          -v "${version}" \
+          -n "${phpExecutable}" \
+          -o
+      fi
     else
-      "${currentPath}/build-composer.sh" \
-        -v "${version}" \
-        -o
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer.sh" \
+          -v "${version}" \
+          -c "${composerScript}" \
+          -o
+      else
+        "${currentPath}/build-composer.sh" \
+          -v "${version}" \
+          -o
+      fi
     fi
   else
     if [[ -n "${phpExecutable}" ]]; then
-      "${currentPath}/build-composer.sh" \
-        -v "${version}" \
-        -n "${phpExecutable}"
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer.sh" \
+          -v "${version}" \
+          -n "${phpExecutable}" \
+          -c "${composerScript}"
+      else
+        "${currentPath}/build-composer.sh" \
+          -v "${version}" \
+          -n "${phpExecutable}"
+      fi
     else
-      "${currentPath}/build-composer.sh" \
-        -v "${version}" \
-        -n "${phpExecutable}"
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-composer.sh" \
+          -v "${version}" \
+          -c "${composerScript}"
+      else
+        "${currentPath}/build-composer.sh" \
+          -v "${version}"
+      fi
     fi
   fi
 elif [[ "${buildType}" == "git" ]]; then

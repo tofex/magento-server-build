@@ -16,6 +16,7 @@ OPTIONS:
   -g  Web group (optional)
   -o  Overwrite Magento version
   -n  PHP executable, default: php
+  -c  Composer script (optional)
 
 Example: ${scriptName} -b /var/www/magento/builds -m 2.4.2 -r "composer|https://composer.company.com|12345|12345"
 EOF
@@ -33,8 +34,9 @@ webUser=
 webGroup=
 magentoOverwrite=0
 phpExecutable=
+composerScript=
 
-while getopts hb:m:r:u:g:on:? option; do
+while getopts hb:m:r:u:g:on:c:? option; do
   case "${option}" in
     h) usage; exit 1;;
     b) buildPath=$(trim "$OPTARG");;
@@ -44,6 +46,7 @@ while getopts hb:m:r:u:g:on:? option; do
     g) webGroup=$(trim "$OPTARG");;
     o) magentoOverwrite=1;;
     n) phpExecutable=$(trim "$OPTARG");;
+    c) composerScript=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -58,12 +61,17 @@ if [[ -z "${magentoVersion}" ]]; then
   exit 1
 fi
 
-currentUser=$(whoami)
+currentUser="$(whoami)"
 if [[ -z "${webUser}" ]]; then
   webUser="${currentUser}"
 fi
 
-currentGroup=$(id -g -n)
+if [[ $(which id >/dev/null 2>&1 && echo "yes" || echo "no") == "yes" ]]; then
+  currentGroup="$(id -g -n)"
+else
+  currentGroupId=$(grep "${currentUser}:" /etc/passwd | cut -d':' -f4)
+  currentGroup=$(grep ":${currentGroupId}:" /etc/group | cut -d':' -f1)
+fi
 if [[ -z "${webGroup}" ]]; then
   webGroup="${currentGroup}"
 fi
@@ -129,11 +137,19 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
       echo "Adding composer access to repository: ${repositoryUrl}"
       if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-          sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+          if [[ -n "${composerScript}" ]]; then
+            sudo -H -u "${webUser}" bash -c "${composerScript} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+          else
+            sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+          fi
         fi
       else
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-          "${phpExecutable}" "${composerBinary}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+          if [[ -n "${composerScript}" ]]; then
+            "${composerScript}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+          else
+            "${phpExecutable}" "${composerBinary}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+          fi
         fi
       fi
     done
@@ -151,7 +167,11 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
     jq '.scripts["post-install-cmd"] = ["bash -c \"shopt -s dotglob; test ! -e mage && cp -n -r vendor/magento/project-community-edition/* . || cat\""]' composer.json | sponge composer.json
     jq '.scripts["post-update-cmd"] = ["bash -c \"shopt -s dotglob; test ! -e mage && cp -n -r vendor/magento/project-community-edition/* . || cat\""]' composer.json | sponge composer.json
   else
-    "${phpExecutable}" "${composerBinary}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
+    if [[ -n "${composerScript}" ]]; then
+      "${composerScript}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
+    else
+      "${phpExecutable}" "${composerBinary}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
+    fi
   fi
 
   if [[ -f "${magentoVersionFile}" ]]; then

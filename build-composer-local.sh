@@ -20,6 +20,7 @@ OPTIONS:
   -u  Web user (optional)
   -g  Web group (optional)
   -n  PHP executable, default: php
+  -c  Composer script (optional)
 
 Example: ${scriptName} -r "composer|https://composer.company.com|12345|12345" -p customer/project -v dev-development -m 2.4.2 -b /var/www/magento/builds
 EOF
@@ -41,8 +42,9 @@ buildPath=
 webUser=
 webGroup=
 phpExecutable=
+composerScript=
 
-while getopts hr:s:p:v:i:m:a:b:u:g:n:? option; do
+while getopts hr:s:p:v:i:m:a:b:u:g:n:c:? option; do
   case "${option}" in
     h) usage; exit 1;;
     r) repositories=$(trim "$OPTARG");;
@@ -56,6 +58,7 @@ while getopts hr:s:p:v:i:m:a:b:u:g:n:? option; do
     u) webUser=$(trim "$OPTARG");;
     g) webGroup=$(trim "$OPTARG");;
     n) phpExecutable=$(trim "$OPTARG");;
+    c) composerScript=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -87,6 +90,10 @@ fi
 if [[ -z "${buildPath}" ]]; then
   echo "No base path of builds specified!"
   exit 1
+fi
+
+if [[ "${composerScript}" == "-" ]]; then
+  composerScript=
 fi
 
 currentUser=$(whoami)
@@ -188,11 +195,19 @@ if [[ -n "${magentoRepositories}" ]]; then
     echo "Adding composer access to repository: ${repositoryUrl}"
     if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-        sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+        if [[ -n "${composerScript}" ]]; then
+          sudo -H -u "${webUser}" bash -c "${composerScript} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+        else
+          sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+        fi
       fi
     else
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-        "${phpExecutable}" "${composerBinary}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+        if [[ -n "${composerScript}" ]]; then
+          "${composerScript}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+        else
+          "${phpExecutable}" "${composerBinary}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+        fi
       fi
     fi
   done
@@ -210,14 +225,30 @@ if [[ -n "${repositories}" ]]; then
     repositoryName=$(echo "${repositoryUrl}" | md5sum | cut -f1 -d" ")
     echo "Adding composer repository: ${repositoryUrl}"
     if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-      sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction repositories.${repositoryName} ${repositoryType} ${repositoryUrl}"
+      if [[ -n "${composerScript}" ]]; then
+        sudo -H -u "${webUser}" bash -c "${composerScript} config --no-interaction repositories.${repositoryName} ${repositoryType} ${repositoryUrl}"
+      else
+        sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction repositories.${repositoryName} ${repositoryType} ${repositoryUrl}"
+      fi
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-        sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+        if [[ -n "${composerScript}" ]]; then
+          sudo -H -u "${webUser}" bash -c "${composerScript} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+        else
+          sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+        fi
       fi
     else
-      "${phpExecutable}" "${composerBinary}" config --no-interaction "repositories.${repositoryName}" "${repositoryType}" "${repositoryUrl}"
+      if [[ -n "${composerScript}" ]]; then
+        "${composerScript}" config --no-interaction "repositories.${repositoryName}" "${repositoryType}" "${repositoryUrl}"
+      else
+        "${phpExecutable}" "${composerBinary}" config --no-interaction "repositories.${repositoryName}" "${repositoryType}" "${repositoryUrl}"
+      fi
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
-        "${phpExecutable}" "${composerBinary}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+        if [[ -n "${composerScript}" ]]; then
+          "${composerScript}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+        else
+          "${phpExecutable}" "${composerBinary}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+        fi
       fi
     fi
   done
@@ -225,19 +256,43 @@ fi
 
 if [[ ${magentoVersion:0:1} == 1 ]]; then
   if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-    sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist magento/project-community-edition:${magentoVersion}-patch"
-    sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0"
+    if [[ -n "${composerScript}" ]]; then
+      sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist magento/project-community-edition:${magentoVersion}-patch"
+    else
+      sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist magento/project-community-edition:${magentoVersion}-patch"
+    fi
+    if [[ -n "${composerScript}" ]]; then
+      sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0"
+    else
+      sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0"
+    fi
   else
-    "${phpExecutable}" "${composerBinary}" require --prefer-dist "magento/project-community-edition:${magentoVersion}-patch"
-    "${phpExecutable}" "${composerBinary}" require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0
+    if [[ -n "${composerScript}" ]]; then
+      "${composerScript}" require --prefer-dist "magento/project-community-edition:${magentoVersion}-patch"
+    else
+      "${phpExecutable}" "${composerBinary}" require --prefer-dist "magento/project-community-edition:${magentoVersion}-patch"
+    fi
+    if [[ -n "${composerScript}" ]]; then
+      "${composerScript}" require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0
+    else
+      "${phpExecutable}" "${composerBinary}" require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0
+    fi
   fi
 fi
 
 echo "Require project composer package: ${composerProject}:${composerVersion}"
 if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-  sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist ${composerProject}:${composerVersion}"
+  if [[ -n "${composerScript}" ]]; then
+    sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist ${composerProject}:${composerVersion}"
+  else
+    sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist ${composerProject}:${composerVersion}"
+  fi
 else
-  "${phpExecutable}" "${composerBinary}" require --prefer-dist "${composerProject}":"${composerVersion}"
+  if [[ -n "${composerScript}" ]]; then
+    "${composerScript}" require --prefer-dist "${composerProject}":"${composerVersion}"
+  else
+    "${phpExecutable}" "${composerBinary}" require --prefer-dist "${composerProject}":"${composerVersion}"
+  fi
 fi
 
 if [[ -n "${additionalComposerProjects}" ]]; then
@@ -246,16 +301,28 @@ if [[ -n "${additionalComposerProjects}" ]]; then
   for additionalComposerProject in "${additionalComposerProjectList[@]}"; do
     echo "Require additional composer package: ${additionalComposerProject}"
     if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-      sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist ${additionalComposerProject}"
+      if [[ -n "${composerScript}" ]]; then
+        sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist ${additionalComposerProject}"
+      else
+        sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist ${additionalComposerProject}"
+      fi
     else
-      "${phpExecutable}" "${composerBinary}" require --prefer-dist "${additionalComposerProject}"
+      if [[ -n "${composerScript}" ]]; then
+        "${composerScript}" require --prefer-dist "${additionalComposerProject}"
+      else
+        "${phpExecutable}" "${composerBinary}" require --prefer-dist "${additionalComposerProject}"
+      fi
     fi
   done
 fi
 
 #if [[ -n "${composerPatches}" ]]; then
 #  echo "Adding composer requirement: cweagans/composer-patches"
-#  ${phpExecutable} ${composerBinary} require --prefer-dist cweagans/composer-patches
+#  if [[ -n "${composerScript}" ]]; then
+#    ${composerScript} require --prefer-dist cweagans/composer-patches
+#  else
+#    ${phpExecutable} ${composerBinary} require --prefer-dist cweagans/composer-patches
+#  fi
 #  IFS=',' read -r -a composerPatchesList <<< "${composerPatches}"
 #  for composerPatch in "${composerPatchesList[@]}"; do
 #    moduleName=$(echo "${composerPatch}" | cut -d'=' -f1)
@@ -266,8 +333,16 @@ fi
 #      jq ".extra[\"patches\"][\"${moduleName}\"] = {\"${patchName}\": \"${patchFile}\"}" composer.json | sponge composer.json
 #    fi
 #  done
-#  ${phpExecutable} ${composerBinary} install
-#  ${phpExecutable} ${composerBinary} update --lock
+#  if [[ -n "${composerScript}" ]]; then
+#    ${composerScript} install
+#  else
+#    ${phpExecutable} ${composerBinary} install
+#  fi
+#  if [[ -n "${composerScript}" ]]; then
+#    ${composerScript} update --lock
+#  else
+#    ${phpExecutable} ${composerBinary} update --lock
+#  fi
 #fi
 
 echo "Creating vcs-info.txt"
