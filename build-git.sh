@@ -74,6 +74,10 @@ if [[ -z "${phpExecutable}" ]]; then
   phpExecutable=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "php")
 fi
 
+if [[ -z "${composerScript}" ]]; then
+  composerScript=$(ini-parse "${currentPath}/../env.properties" "no" "${buildServer}" "composer")
+fi
+
 if [[ "${serverType}" == "ssh" ]]; then
   echo "--- Building with Git on remote server: ${buildServer} ---"
 else
@@ -168,7 +172,7 @@ else
 
   if [[ "${magento}" == "yes" ]]; then
     if [[ "${composer}" == 1 ]] || [[ "${composer}" == "yes" ]]; then
-      composerScript="${currentPath}/../ops/composer-install/web-server.sh"
+      composerInstallScript="${currentPath}/../ops/composer-install/web-server.sh"
       if [[ -n "${phpExecutable}" ]]; then
         "${currentPath}/build-git-local.sh" \
           -r "${gitUrl}" \
@@ -179,7 +183,7 @@ else
           -u "${webUser}" \
           -g "${webGroup}" \
           -c \
-          -s "${composerScript}" \
+          -s "${composerInstallScript}" \
           -n "${phpExecutable}"
       else
         "${currentPath}/build-git-local.sh" \
@@ -191,7 +195,7 @@ else
           -u "${webUser}" \
           -g "${webGroup}" \
           -c \
-          -s "${composerScript}"
+          -s "${composerInstallScript}"
       fi
     else
       "${currentPath}/build-git-local.sh" \
