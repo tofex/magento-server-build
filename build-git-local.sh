@@ -97,7 +97,12 @@ if [[ -z "${webUser}" ]]; then
   webUser="${currentUser}"
 fi
 
-currentGroup=$(id -g -n)
+if [[ $(which id >/dev/null 2>&1 && echo "yes" || echo "no") == "yes" ]]; then
+  currentGroup="$(id -g -n)"
+else
+  currentGroupId=$(grep "${currentUser}:" /etc/passwd | cut -d':' -f4)
+  currentGroup=$(grep ":${currentGroupId}:" /etc/group | cut -d':' -f1)
+fi
 if [[ -z "${webGroup}" ]]; then
   webGroup="${currentGroup}"
 fi

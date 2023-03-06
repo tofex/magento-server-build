@@ -126,23 +126,51 @@ if [[ "${buildType}" == "composer" ]]; then
 elif [[ "${buildType}" == "git" ]]; then
   if [[ "${magentoOverwrite}" == 1 ]]; then
     if [[ -n "${phpExecutable}" ]]; then
-      "${currentPath}/build-git.sh" \
-        -b "${version}" \
-        -n "${phpExecutable}" \
-        -o
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-git.sh" \
+          -b "${version}" \
+          -n "${phpExecutable}" \
+          -c "${composerScript}" \
+          -o
+      else
+        "${currentPath}/build-git.sh" \
+          -b "${version}" \
+          -n "${phpExecutable}" \
+          -o
+      fi
     else
-      "${currentPath}/build-git.sh" \
-        -b "${version}" \
-        -o
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-git.sh" \
+          -b "${version}" \
+          -c "${composerScript}" \
+          -o
+      else
+        "${currentPath}/build-git.sh" \
+          -b "${version}" \
+          -o
+      fi
     fi
   else
     if [[ -n "${phpExecutable}" ]]; then
-      "${currentPath}/build-git.sh" \
-        -b "${version}" \
-        -n "${phpExecutable}"
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-git.sh" \
+          -b "${version}" \
+          -n "${phpExecutable}" \
+          -c "${composerScript}"
+      else
+        "${currentPath}/build-git.sh" \
+          -b "${version}" \
+          -n "${phpExecutable}"
+      fi
     else
-      "${currentPath}/build-git.sh" \
-        -b "${version}"
+      if [[ -n "${composerScript}" ]]; then
+        "${currentPath}/build-git.sh" \
+          -b "${version}" \
+          -c "${composerScript}"
+      else
+        "${currentPath}/build-git.sh" \
+          -b "${version}"
+      fi
     fi
   fi
 else
