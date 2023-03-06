@@ -197,7 +197,7 @@ if [[ -n "${magentoRepositories}" ]]; then
     if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
         if [[ -n "${composerScript}" ]]; then
-          sudo -H -u "${webUser}" bash -c "${composerScript} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+          sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
         else
           sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
         fi
@@ -205,7 +205,7 @@ if [[ -n "${magentoRepositories}" ]]; then
     else
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
         if [[ -n "${composerScript}" ]]; then
-          "${composerScript}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+          COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
         else
           "${phpExecutable}" "${composerBinary}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
         fi
@@ -227,26 +227,26 @@ if [[ -n "${repositories}" ]]; then
     echo "Adding composer repository: ${repositoryUrl}"
     if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
       if [[ -n "${composerScript}" ]]; then
-        sudo -H -u "${webUser}" bash -c "${composerScript} config --no-interaction repositories.${repositoryName} ${repositoryType} ${repositoryUrl}"
+        sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} config --no-interaction repositories.${repositoryName} ${repositoryType} ${repositoryUrl}"
       else
         sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction repositories.${repositoryName} ${repositoryType} ${repositoryUrl}"
       fi
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
         if [[ -n "${composerScript}" ]]; then
-          sudo -H -u "${webUser}" bash -c "${composerScript} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+          sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
         else
           sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
         fi
       fi
     else
       if [[ -n "${composerScript}" ]]; then
-        "${composerScript}" config --no-interaction "repositories.${repositoryName}" "${repositoryType}" "${repositoryUrl}"
+        COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" config --no-interaction "repositories.${repositoryName}" "${repositoryType}" "${repositoryUrl}"
       else
         "${phpExecutable}" "${composerBinary}" config --no-interaction "repositories.${repositoryName}" "${repositoryType}" "${repositoryUrl}"
       fi
       if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
         if [[ -n "${composerScript}" ]]; then
-          "${composerScript}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+          COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
         else
           "${phpExecutable}" "${composerBinary}" config --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
         fi
@@ -258,23 +258,23 @@ fi
 if [[ ${magentoVersion:0:1} == 1 ]]; then
   if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
     if [[ -n "${composerScript}" ]]; then
-      sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist magento/project-community-edition:${magentoVersion}-patch"
+      sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} require --prefer-dist magento/project-community-edition:${magentoVersion}-patch"
     else
       sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist magento/project-community-edition:${magentoVersion}-patch"
     fi
     if [[ -n "${composerScript}" ]]; then
-      sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0"
+      sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0"
     else
       sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0"
     fi
   else
     if [[ -n "${composerScript}" ]]; then
-      "${composerScript}" require --prefer-dist "magento/project-community-edition:${magentoVersion}-patch"
+      COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" require --prefer-dist "magento/project-community-edition:${magentoVersion}-patch"
     else
       "${phpExecutable}" "${composerBinary}" require --prefer-dist "magento/project-community-edition:${magentoVersion}-patch"
     fi
     if [[ -n "${composerScript}" ]]; then
-      "${composerScript}" require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0
+      COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0
     else
       "${phpExecutable}" "${composerBinary}" require --prefer-dist magento-hackathon/magento-composer-installer:^3.1.0
     fi
@@ -284,13 +284,13 @@ fi
 echo "Require project composer package: ${composerProject}:${composerVersion}"
 if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
   if [[ -n "${composerScript}" ]]; then
-    sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist ${composerProject}:${composerVersion}"
+    sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} require --prefer-dist ${composerProject}:${composerVersion}"
   else
     sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist ${composerProject}:${composerVersion}"
   fi
 else
   if [[ -n "${composerScript}" ]]; then
-    "${composerScript}" require --prefer-dist "${composerProject}":"${composerVersion}"
+    COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" require --prefer-dist "${composerProject}":"${composerVersion}"
   else
     "${phpExecutable}" "${composerBinary}" require --prefer-dist "${composerProject}":"${composerVersion}"
   fi
@@ -303,13 +303,13 @@ if [[ -n "${additionalComposerProjects}" ]]; then
     echo "Require additional composer package: ${additionalComposerProject}"
     if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
       if [[ -n "${composerScript}" ]]; then
-        sudo -H -u "${webUser}" bash -c "${composerScript} require --prefer-dist ${additionalComposerProject}"
+        sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} require --prefer-dist ${additionalComposerProject}"
       else
         sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} require --prefer-dist ${additionalComposerProject}"
       fi
     else
       if [[ -n "${composerScript}" ]]; then
-        "${composerScript}" require --prefer-dist "${additionalComposerProject}"
+        COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" require --prefer-dist "${additionalComposerProject}"
       else
         "${phpExecutable}" "${composerBinary}" require --prefer-dist "${additionalComposerProject}"
       fi
@@ -320,7 +320,7 @@ fi
 #if [[ -n "${composerPatches}" ]]; then
 #  echo "Adding composer requirement: cweagans/composer-patches"
 #  if [[ -n "${composerScript}" ]]; then
-#    ${composerScript} require --prefer-dist cweagans/composer-patches
+#    COMPOSER_MEMORY_LIMIT=-1 ${composerScript} require --prefer-dist cweagans/composer-patches
 #  else
 #    ${phpExecutable} ${composerBinary} require --prefer-dist cweagans/composer-patches
 #  fi
@@ -335,12 +335,12 @@ fi
 #    fi
 #  done
 #  if [[ -n "${composerScript}" ]]; then
-#    ${composerScript} install
+#    COMPOSER_MEMORY_LIMIT=-1 ${composerScript} install
 #  else
 #    ${phpExecutable} ${composerBinary} install
 #  fi
 #  if [[ -n "${composerScript}" ]]; then
-#    ${composerScript} update --lock
+#    COMPOSER_MEMORY_LIMIT=-1 ${composerScript} update --lock
 #  else
 #    ${phpExecutable} ${composerBinary} update --lock
 #  fi

@@ -138,7 +138,7 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
       if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
           if [[ -n "${composerScript}" ]]; then
-            sudo -H -u "${webUser}" bash -c "${composerScript} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
+            sudo -H -u "${webUser}" bash -c "COMPOSER_MEMORY_LIMIT=-1 ${composerScript} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
           else
             sudo -H -u "${webUser}" bash -c "${phpExecutable} ${composerBinary} config --ansi --global --no-interaction http-basic.${repositoryHostName} ${repositoryComposerUser} ${repositoryComposerPassword}"
           fi
@@ -146,7 +146,7 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
       else
         if [[ -n "${repositoryComposerUser}" ]] || [[ -n "${repositoryComposerPassword}" ]]; then
           if [[ -n "${composerScript}" ]]; then
-            "${composerScript}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+            COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
           else
             "${phpExecutable}" "${composerBinary}" config --ansi --global --no-interaction "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
           fi
@@ -168,7 +168,7 @@ if [[ ! -f "${magentoVersionFile}" ]] || [[ "${magentoOverwrite}" == 1 ]]; then
     jq '.scripts["post-update-cmd"] = ["bash -c \"shopt -s dotglob; test ! -e mage && cp -n -r vendor/magento/project-community-edition/* . || cat\""]' composer.json | sponge composer.json
   else
     if [[ -n "${composerScript}" ]]; then
-      "${composerScript}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
+      COMPOSER_MEMORY_LIMIT=-1 "${composerScript}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
     else
       "${phpExecutable}" "${composerBinary}" create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-community-edition=${magentoVersion}" --no-interaction --prefer-dist .
     fi

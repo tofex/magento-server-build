@@ -17,7 +17,7 @@ OPTIONS:
   -u  Web user (optional)
   -g  Web group (optional)
   -c  Run composer (optional)
-  -s  Full path to composer script to run if composer process
+  -s  Full path to composer install script to run if composer process
   -n  PHP executable, default: php
 
 Example: ${scriptName} -r git@bitbucket.org:project01.git -b development  -p /var/www/magento/builds
@@ -37,7 +37,7 @@ buildPath=
 webUser=
 webGroup=
 composer=0
-composerScript=
+composerInstallScript=
 phpExecutable=
 
 while getopts hb:i:m:r:p:u:g:cs:n:? option; do
@@ -51,7 +51,7 @@ while getopts hb:i:m:r:p:u:g:cs:n:? option; do
     u) webUser=$(trim "$OPTARG");;
     g) webGroup=$(trim "$OPTARG");;
     c) composer=1;;
-    s) composerScript=$(trim "$OPTARG");;
+    s) composerInstallScript=$(trim "$OPTARG");;
     n) phpExecutable=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
@@ -81,8 +81,8 @@ if [[ -z "${buildPath}" ]]; then
   exit 1
 fi
 
-if [[ "${composer}" == 1 ]] && [[ -z "${composerScript}" ]]; then
-  echo "No composer script specified"
+if [[ "${composer}" == 1 ]] && [[ -z "${composerInstallScript}" ]]; then
+  echo "No composer installation script specified"
   exit 1
 fi
 
@@ -372,11 +372,11 @@ shopt -u dotglob
 cd "${branchPath}"
 
 if [[ "${composer}" == 1 ]]; then
-  if [[ ! -f "${composerScript}" ]]; then
-    echo "Missing composer script at: ${composerScript}"
+  if [[ ! -f "${composerInstallScript}" ]]; then
+    echo "Missing composer script at: ${composerInstallScript}"
     exit 1
   fi
-  "${composerScript}" \
+  "${composerInstallScript}" \
     -w "${branchPath}" \
     -u "${webUser}" \
     -g "${webGroup}" \
