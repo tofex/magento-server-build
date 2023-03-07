@@ -17,8 +17,9 @@ OPTIONS:
   -u  Web user (optional)
   -g  Web group (optional)
   -c  Run composer (optional)
-  -s  Full path to composer install script to run if composer process
-  -n  PHP executable, default: php
+  -s  Full path to composer install script to run if composer process (required if run composer)
+  -n  PHP executable (optional)
+  -o  Composer script (optional)
 
 Example: ${scriptName} -r git@bitbucket.org:project01.git -b development  -p /var/www/magento/builds
 EOF
@@ -39,8 +40,9 @@ webGroup=
 composer=0
 composerInstallScript=
 phpExecutable=
+composerScript=
 
-while getopts hb:i:m:r:p:u:g:cs:n:? option; do
+while getopts hb:i:m:r:p:u:g:cs:n:o:? option; do
   case ${option} in
     h) usage; exit 1;;
     r) url=$(trim "$OPTARG");;
@@ -53,6 +55,7 @@ while getopts hb:i:m:r:p:u:g:cs:n:? option; do
     c) composer=1;;
     s) composerInstallScript=$(trim "$OPTARG");;
     n) phpExecutable=$(trim "$OPTARG");;
+    o) composerScript=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -84,10 +87,6 @@ fi
 if [[ "${composer}" == 1 ]] && [[ -z "${composerInstallScript}" ]]; then
   echo "No composer installation script specified"
   exit 1
-fi
-
-if [[ -z "${phpExecutable}" ]]; then
-  phpExecutable="php"
 fi
 
 branchPathName=$(echo "${branch}" | sed 's/[^a-zA-Z0-9\.\-]/_/g')
@@ -376,11 +375,36 @@ if [[ "${composer}" == 1 ]]; then
     echo "Missing composer script at: ${composerInstallScript}"
     exit 1
   fi
-  "${composerInstallScript}" \
-    -w "${branchPath}" \
-    -u "${webUser}" \
-    -g "${webGroup}" \
-    -b "${phpExecutable}"
+
+  if [[ -n "${phpExecutable}" ]]; then
+    if [[ -n "${composerScript}" ]]; then
+      "${composerInstallScript}" \
+        -w "${branchPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}" \
+        -b "${phpExecutable}" \
+        -c "${composerScript}"
+    else
+      "${composerInstallScript}" \
+        -w "${branchPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}" \
+        -b "${phpExecutable}"
+    fi
+  else
+    if [[ -n "${composerScript}" ]]; then
+      "${composerInstallScript}" \
+        -w "${branchPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}" \
+        -c "${composerScript}"
+    else
+      "${composerInstallScript}" \
+        -w "${branchPath}" \
+        -u "${webUser}" \
+        -g "${webGroup}"
+    fi
+  fi
 fi
 
 echo "Creating vcs-info.txt"
