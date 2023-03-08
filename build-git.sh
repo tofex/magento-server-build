@@ -86,7 +86,7 @@ else
 
   magentoRepositories=$( IFS=$','; echo "${magentoRepositoryList[*]}" )
 
-  if [[ "${magento}" == "yes" ]]; then
+  if [[ "${magento}" == 1 ]] || [[ "${magento}" == "yes" ]]; then
     if [[ "${magentoOverwrite}" == 1 ]]; then
       if [[ -n "${phpExecutable}" ]]; then
         if [[ -n "${composerScript}" ]]; then
@@ -170,7 +170,7 @@ else
     fi
   fi
 
-  if [[ "${magento}" == "yes" ]]; then
+  if [[ "${magento}" == 1 ]] || [[ "${magento}" == "yes" ]]; then
     if [[ "${composer}" == 1 ]] || [[ "${composer}" == "yes" ]]; then
       composerInstallScript="${currentPath}/../ops/composer-install/web-server.sh"
       if [[ -n "${phpExecutable}" ]]; then
